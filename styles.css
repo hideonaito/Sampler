@@ -155,10 +155,10 @@ input[type="range"]::-moz-range-thumb {
 }
 
 
-.pads-section { margin-top: .6rem; }
+.pads-section { margin-top: 1rem; }
 .pads {
   display:grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(90px, 1fr));
   gap: .8rem;
 }
 .pad {
@@ -169,7 +169,7 @@ input[type="range"]::-moz-range-thumb {
   border: 1px solid #090909;
   font-weight: 700;
   letter-spacing: .04em;
-  font-size: 1rem;
+  font-size: .86rem;
 }
 .pad.active {
   background: linear-gradient(165deg, #ff9c40, var(--active));
