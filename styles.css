@@ -50,7 +50,7 @@ body {
 .io-panel, .effects-panel, .edit-panel {
   background: var(--panel);
   padding: .72rem;
-  border-radius: 10px;
+  border-radius: 12px;
   border: 1px solid #0f0f0f;
 }
 .actions { display:grid; grid-template-columns: 118px 1fr; gap:.35rem .4rem; align-items:center; justify-content:start; }
@@ -155,21 +155,21 @@ input[type="range"]::-moz-range-thumb {
 }
 
 
-.pads-section { margin-top: .45rem; }
+.pads-section { margin-top: .6rem; }
 .pads {
   display:grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: .36rem;
+  gap: .8rem;
 }
 .pad {
-  aspect-ratio: 1/0.72;
-  border-radius: 10px;
+  aspect-ratio: 1/1;
+  border-radius: 12px;
   background: linear-gradient(165deg, #535353, #262626);
   color: var(--text);
   border: 1px solid #090909;
   font-weight: 700;
   letter-spacing: .04em;
-  font-size: .86rem;
+  font-size: 1rem;
 }
 .pad.active {
   background: linear-gradient(165deg, #ff9c40, var(--active));
@@ -205,7 +205,7 @@ input[type="range"]::-moz-range-thumb {
   input[type="range"]::-webkit-slider-thumb { width: 20px; height: 20px; margin-top: -7px; }
   input[type="range"]::-moz-range-thumb { width: 20px; height: 20px; }
 
-  .pads-section { margin-top: .25rem; }
-  .pads { gap: .24rem; }
-  .pad { aspect-ratio: 1/0.62; font-size: .64rem; border-radius: 7px; }
+  .pads-section { margin-top: .45rem; }
+  .pads { gap: .34rem; }
+  .pad { aspect-ratio: 1/0.72; font-size: .72rem; border-radius: 8px; }
 }
