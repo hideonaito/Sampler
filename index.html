@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sampler - MPC Tribute</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="machine">
+      <header class="topbar">
+        <h1>Sampler</h1>
+        <p>MPC2000 Tribute</p>
+      </header>
+
+      <section class="screen" aria-live="polite">
+        <div>
+          <h2>Sample Slot: <span id="activeSlotLabel">Pad 1</span></h2>
+          <p id="status">Ready. マイク録音またはファイル読み込みを行ってください。</p>
+        </div>
+      </section>
+
+      <section class="controls">
+        <div class="io-panel">
+                    <div class="actions">
+            <button id="recordToggleBtn">● Record</button>
+            <button id="clearPadBtn">Clear Pad</button>
+            <label class="file-input">
+              Load Audio
+              <input id="filePicker" type="file" accept="audio/*" />
+            </label>
+          </div>
+        </div>
+
+        <div class="effects-panel">
+                    <label>
+            PitchShifter (<span id="pitchValue">0</span> semitone)
+            <input id="pitch" type="range" min="-12" max="12" value="0" step="1" />
+          </label>
+          <label>
+            Reverb (<span id="reverbValue">0.25</span>)
+            <input id="reverb" type="range" min="0" max="1" value="0.25" step="0.01" />
+          </label>
+          <label>
+            Delay (<span id="delayValue">0.18</span>)
+            <input id="delay" type="range" min="0" max="0.7" value="0.18" step="0.01" />
+          </label>
+        </div>
+
+        <div class="edit-panel">
+          <h3>④ カット編集</h3>
+          <label>
+            Start (<span id="cutStartValue">0.00</span>s)
+            <input id="cutStart" type="range" min="0" max="100" value="0" step="0.1" />
+          </label>
+          <label>
+            End (<span id="cutEndValue">0.00</span>s)
+            <input id="cutEnd" type="range" min="0" max="100" value="100" step="0.1" />
+          </label>
+          <button id="applyCutBtn">Apply Cut</button>
+        </div>
+      </section>
+
+      <section class="pads-section">
+                <div id="pads" class="pads"></div>
+      </section>
+    </main>
+
+    <script src="app.js" type="module"></script>
+  </body>
+</html>
