@@ -16,10 +16,12 @@ const filePicker = document.getElementById("filePicker");
 const clearPadBtn = document.getElementById("clearPadBtn");
 
 const pitch = document.getElementById("pitch");
+const tempo = document.getElementById("tempo");
 const reverb = document.getElementById("reverb");
 const delay = document.getElementById("delay");
 
 const pitchValue = document.getElementById("pitchValue");
+const tempoValue = document.getElementById("tempoValue");
 const reverbValue = document.getElementById("reverbValue");
 const delayValue = document.getElementById("delayValue");
 const cutStart = document.getElementById("cutStart");
@@ -127,13 +129,52 @@ function createReverbImpulse(seconds = 2, decay = 2) {
 }
 const impulse = createReverbImpulse();
 
+function createBufferFromChannels(channels, sampleRate) {
+  const out = audioContext.createBuffer(channels.length, channels[0].length, sampleRate);
+  channels.forEach((data, ch) => out.copyToChannel(data, ch));
+  return out;
+}
+
+function granularProcess(buffer, pitchSemitones, tempoFactor) {
+  const ratio = Math.pow(2, pitchSemitones / 12);
+  const grainSize = Math.max(256, Math.floor(buffer.sampleRate * 0.045));
+  const overlap = 0.5;
+  const hopOut = Math.floor(grainSize * (1 - overlap));
+  const hopIn = Math.max(1, Math.floor((hopOut * tempoFactor) / ratio));
+  const outLength = Math.max(1, Math.floor(buffer.length / Math.max(tempoFactor, 0.01)));
+  const channels = [];
+
+  for (let ch = 0; ch < buffer.numberOfChannels; ch++) {
+    const input = buffer.getChannelData(ch);
+    const output = new Float32Array(outLength + grainSize + 1);
+    for (let outPos = 0, inPos = 0; outPos < outLength; outPos += hopOut, inPos += hopIn) {
+      for (let i = 0; i < grainSize; i++) {
+        const srcIndex = inPos + i * ratio;
+        const i0 = Math.floor(srcIndex);
+        const frac = srcIndex - i0;
+        const s0 = input[i0] || 0;
+        const s1 = input[i0 + 1] || 0;
+        const sample = s0 + (s1 - s0) * frac;
+        const win = 0.5 - 0.5 * Math.cos((2 * Math.PI * i) / (grainSize - 1));
+        const o = outPos + i;
+        if (o < output.length) output[o] += sample * win;
+      }
+    }
+    channels.push(output.subarray(0, outLength));
+  }
+
+  return createBufferFromChannels(channels, buffer.sampleRate);
+}
+
+
 function playPad(index) {
   const pad = pads[index];
   if (!pad.buffer) return setStatus(`${pad.name} にサンプルがありません。`);
   if (audioContext.state === "suspended") audioContext.resume();
 
   const source = audioContext.createBufferSource();
-  source.buffer = pad.buffer;
+  const processed = granularProcess(pad.buffer, Number(pitch.value), Number(tempo.value));
+  source.buffer = processed;
 
   const dry = audioContext.createGain();
   const wet = audioContext.createGain();
@@ -141,7 +182,7 @@ function playPad(index) {
   const feedback = audioContext.createGain();
   const convolver = audioContext.createConvolver();
 
-  source.playbackRate.value = Math.pow(2, Number(pitch.value) / 12);
+  source.playbackRate.value = 1;
   convolver.buffer = impulse;
   wet.gain.value = Number(reverb.value);
   delayNode.delayTime.value = Number(delay.value);
@@ -153,8 +194,8 @@ function playPad(index) {
 
   const startRatio = Number(cutStart.value) / 100;
   const endRatio = Number(cutEnd.value) / 100;
-  const startAt = pad.buffer.duration * Math.min(startRatio, endRatio);
-  const endAt = pad.buffer.duration * Math.max(startRatio, endRatio);
+  const startAt = processed.duration * Math.min(startRatio, endRatio);
+  const endAt = processed.duration * Math.max(startRatio, endRatio);
   source.start(0, startAt, Math.max(0.02, endAt - startAt));
   setStatus(`${pad.name} を再生しました。`);
 }
@@ -239,9 +280,10 @@ window.addEventListener("keydown", (event) => {
   if (event.key === "Delete" || event.key === "Backspace") clearActivePad();
 });
 
-[pitch, reverb, delay].forEach((slider) => {
+[pitch, tempo, reverb, delay].forEach((slider) => {
   slider.addEventListener("input", () => {
     pitchValue.textContent = pitch.value;
+    tempoValue.textContent = Number(tempo.value).toFixed(2);
     reverbValue.textContent = reverb.value;
     delayValue.textContent = delay.value;
   });

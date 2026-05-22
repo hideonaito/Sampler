@@ -12,7 +12,8 @@ MPC2000 へのオマージュを込めた、ブラウザで動くシンプルな
    - パッドクリック／キーボード 1〜9 で再生
    - パッド音源の消去（Clear Pad / Delete / Backspace）
 3. **エフェクト**
-   - PitchShifter（再生レート変換）
+   - PitchShifter（ピッチのみ変更・テンポ維持のグラニュラー処理）
+   - TempoShifter（ピッチ維持でテンポのみ変更）
    - Reverb（Convolver）
    - Delay（Delay + Feedback）
 4. **カット編集（波形表示）**
