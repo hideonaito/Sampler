@@ -27,10 +27,10 @@ const cutEnd = document.getElementById("cutEnd");
 const cutStartValue = document.getElementById("cutStartValue");
 const cutEndValue = document.getElementById("cutEndValue");
 const applyCutBtn = document.getElementById("applyCutBtn");
+const waveformCanvas = document.getElementById("waveformCanvas");
+const wfCtx = waveformCanvas.getContext("2d");
 
-function setStatus(msg) {
-  statusEl.textContent = msg;
-}
+function setStatus(msg) { statusEl.textContent = msg; }
 
 function buildPads() {
   padsContainer.innerHTML = "";
@@ -39,15 +39,71 @@ function buildPads() {
     btn.className = "pad";
     btn.textContent = `${pad.name}${pad.buffer ? " ●" : ""}`;
     if (index === activePadIndex) btn.classList.add("active");
-
     btn.addEventListener("click", () => {
       activePadIndex = index;
       updatePadUI();
       playPad(index);
     });
-
     padsContainer.appendChild(btn);
   });
+}
+
+function drawWaveform() {
+  const width = waveformCanvas.width;
+  const height = waveformCanvas.height;
+  const pad = pads[activePadIndex];
+
+  wfCtx.clearRect(0, 0, width, height);
+  wfCtx.fillStyle = "#101417";
+  wfCtx.fillRect(0, 0, width, height);
+
+  if (!pad.buffer) {
+    wfCtx.fillStyle = "#6f8b77";
+    wfCtx.font = "14px sans-serif";
+    wfCtx.fillText("No sample loaded", 18, height / 2 + 4);
+    return;
+  }
+
+  const data = pad.buffer.getChannelData(0);
+  const step = Math.ceil(data.length / width);
+  const amp = (height / 2) * 0.9;
+
+  wfCtx.strokeStyle = "#86f0a3";
+  wfCtx.lineWidth = 1;
+  wfCtx.beginPath();
+
+  for (let x = 0; x < width; x++) {
+    let min = 1;
+    let max = -1;
+    const start = x * step;
+    const end = Math.min(start + step, data.length);
+    for (let i = start; i < end; i++) {
+      const v = data[i];
+      if (v < min) min = v;
+      if (v > max) max = v;
+    }
+    wfCtx.moveTo(x, (1 + min) * amp);
+    wfCtx.lineTo(x, (1 + max) * amp);
+  }
+  wfCtx.stroke();
+
+  const startX = (Number(cutStart.value) / 100) * width;
+  const endX = (Number(cutEnd.value) / 100) * width;
+  const left = Math.min(startX, endX);
+  const right = Math.max(startX, endX);
+
+  wfCtx.fillStyle = "rgba(0,0,0,0.42)";
+  wfCtx.fillRect(0, 0, left, height);
+  wfCtx.fillRect(right, 0, width - right, height);
+
+  wfCtx.strokeStyle = "#ff9f2c";
+  wfCtx.lineWidth = 2;
+  wfCtx.beginPath();
+  wfCtx.moveTo(left, 0);
+  wfCtx.lineTo(left, height);
+  wfCtx.moveTo(right, 0);
+  wfCtx.lineTo(right, height);
+  wfCtx.stroke();
 }
 
 function updatePadUI() {
@@ -63,25 +119,17 @@ function createReverbImpulse(seconds = 2, decay = 2) {
   const rate = audioContext.sampleRate;
   const length = rate * seconds;
   const impulse = audioContext.createBuffer(2, length, rate);
-
   for (let channel = 0; channel < 2; channel++) {
     const data = impulse.getChannelData(channel);
-    for (let i = 0; i < length; i++) {
-      data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / length, decay);
-    }
+    for (let i = 0; i < length; i++) data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / length, decay);
   }
   return impulse;
 }
-
 const impulse = createReverbImpulse();
 
 function playPad(index) {
   const pad = pads[index];
-  if (!pad.buffer) {
-    setStatus(`${pad.name} にサンプルがありません。`);
-    return;
-  }
-
+  if (!pad.buffer) return setStatus(`${pad.name} にサンプルがありません。`);
   if (audioContext.state === "suspended") audioContext.resume();
 
   const source = audioContext.createBufferSource();
@@ -95,40 +143,28 @@ function playPad(index) {
 
   source.playbackRate.value = Math.pow(2, Number(pitch.value) / 12);
   convolver.buffer = impulse;
-
   wet.gain.value = Number(reverb.value);
   delayNode.delayTime.value = Number(delay.value);
   feedback.gain.value = 0.35;
 
-  source.connect(dry);
-  dry.connect(audioContext.destination);
-
-  source.connect(convolver);
-  convolver.connect(wet);
-  wet.connect(audioContext.destination);
-
-  source.connect(delayNode);
-  delayNode.connect(feedback);
-  feedback.connect(delayNode);
-  delayNode.connect(audioContext.destination);
+  source.connect(dry); dry.connect(audioContext.destination);
+  source.connect(convolver); convolver.connect(wet); wet.connect(audioContext.destination);
+  source.connect(delayNode); delayNode.connect(feedback); feedback.connect(delayNode); delayNode.connect(audioContext.destination);
 
   const startRatio = Number(cutStart.value) / 100;
   const endRatio = Number(cutEnd.value) / 100;
   const startAt = pad.buffer.duration * Math.min(startRatio, endRatio);
   const endAt = pad.buffer.duration * Math.max(startRatio, endRatio);
-  const playDuration = Math.max(0.02, endAt - startAt);
-
-  source.start(0, startAt, playDuration);
+  source.start(0, startAt, Math.max(0.02, endAt - startAt));
   setStatus(`${pad.name} を再生しました。`);
 }
 
 function refreshCutDisplay() {
   const pad = pads[activePadIndex];
   const duration = pad.buffer ? pad.buffer.duration : 0;
-  const startSec = (duration * Number(cutStart.value)) / 100;
-  const endSec = (duration * Number(cutEnd.value)) / 100;
-  cutStartValue.textContent = startSec.toFixed(2);
-  cutEndValue.textContent = endSec.toFixed(2);
+  cutStartValue.textContent = ((duration * Number(cutStart.value)) / 100).toFixed(2);
+  cutEndValue.textContent = ((duration * Number(cutEnd.value)) / 100).toFixed(2);
+  drawWaveform();
 }
 
 function resetCutRange() {
@@ -137,14 +173,9 @@ function resetCutRange() {
   refreshCutDisplay();
 }
 
-
 function clearActivePad() {
   const pad = pads[activePadIndex];
-  if (!pad.buffer) {
-    setStatus(`${pad.name} はすでに空です。`);
-    return;
-  }
-
+  if (!pad.buffer) return setStatus(`${pad.name} はすでに空です。`);
   pad.buffer = null;
   resetCutRange();
   updatePadUI();
@@ -164,16 +195,13 @@ async function startRecording() {
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
     mediaRecorder = new MediaRecorder(stream);
     recordedChunks = [];
-
     mediaRecorder.ondataavailable = (e) => recordedChunks.push(e.data);
     mediaRecorder.onstop = async () => {
       const blob = new Blob(recordedChunks, { type: "audio/webm" });
-      const arr = await blob.arrayBuffer();
-      await assignAudio(arr);
+      await assignAudio(await blob.arrayBuffer());
       stream.getTracks().forEach((t) => t.stop());
       recordToggleBtn.textContent = "● Record";
     };
-
     mediaRecorder.start();
     setStatus("録音中... ボタンをもう一度押すと停止します。");
     recordToggleBtn.textContent = "■ Stop";
@@ -191,23 +219,15 @@ function stopRecording() {
 }
 
 recordToggleBtn.addEventListener("click", async () => {
-  if (!mediaRecorder || mediaRecorder.state === "inactive") {
-    await startRecording();
-    return;
-  }
-
+  if (!mediaRecorder || mediaRecorder.state === "inactive") return startRecording();
   stopRecording();
 });
-
 clearPadBtn.addEventListener("click", clearActivePad);
-
 filePicker.addEventListener("change", async (event) => {
   const file = event.target.files?.[0];
   if (!file) return;
-  const arr = await file.arrayBuffer();
-  await assignAudio(arr);
+  await assignAudio(await file.arrayBuffer());
 });
-
 window.addEventListener("keydown", (event) => {
   const idx = Number(event.key) - 1;
   if (idx >= 0 && idx < pads.length) {
@@ -216,10 +236,7 @@ window.addEventListener("keydown", (event) => {
     playPad(idx);
     return;
   }
-
-  if (event.key === "Delete" || event.key === "Backspace") {
-    clearActivePad();
-  }
+  if (event.key === "Delete" || event.key === "Backspace") clearActivePad();
 });
 
 [pitch, reverb, delay].forEach((slider) => {
@@ -230,32 +247,18 @@ window.addEventListener("keydown", (event) => {
   });
 });
 
-buildPads();
-
-
 cutStart.addEventListener("input", refreshCutDisplay);
 cutEnd.addEventListener("input", refreshCutDisplay);
-
 applyCutBtn.addEventListener("click", () => {
   const pad = pads[activePadIndex];
-  if (!pad.buffer) {
-    setStatus("先にサンプルを読み込んでください。");
-    return;
-  }
+  if (!pad.buffer) return setStatus("先にサンプルを読み込んでください。");
 
-  const startRatio = Number(cutStart.value) / 100;
-  const endRatio = Number(cutEnd.value) / 100;
-  const startAt = pad.buffer.duration * Math.min(startRatio, endRatio);
-  const endAt = pad.buffer.duration * Math.max(startRatio, endRatio);
+  const startAt = pad.buffer.duration * Math.min(Number(cutStart.value), Number(cutEnd.value)) / 100;
+  const endAt = pad.buffer.duration * Math.max(Number(cutStart.value), Number(cutEnd.value)) / 100;
   const frameStart = Math.floor(startAt * pad.buffer.sampleRate);
   const frameEnd = Math.floor(endAt * pad.buffer.sampleRate);
   const frameLength = Math.max(1, frameEnd - frameStart);
-
-  const trimmed = audioContext.createBuffer(
-    pad.buffer.numberOfChannels,
-    frameLength,
-    pad.buffer.sampleRate,
-  );
+  const trimmed = audioContext.createBuffer(pad.buffer.numberOfChannels, frameLength, pad.buffer.sampleRate);
 
   for (let ch = 0; ch < pad.buffer.numberOfChannels; ch++) {
     const src = pad.buffer.getChannelData(ch).subarray(frameStart, frameStart + frameLength);
@@ -264,8 +267,9 @@ applyCutBtn.addEventListener("click", () => {
 
   pad.buffer = trimmed;
   resetCutRange();
-  setStatus(`${pad.name} を ${startAt.toFixed(2)}s - ${endAt.toFixed(2)}s でカットしました。`);
+  setStatus(`${pad.name} を ${startAt.toFixed(2)}s - ${endAt.toFixed(2)}s でトリミングしました。`);
   updatePadUI();
 });
 
+buildPads();
 refreshCutDisplay();

@@ -22,7 +22,7 @@
 
       <section class="controls">
         <div class="io-panel">
-                    <div class="actions">
+          <div class="actions">
             <button id="recordToggleBtn">● Record</button>
             <button id="clearPadBtn">Clear Pad</button>
             <label class="file-input">
@@ -33,7 +33,7 @@
         </div>
 
         <div class="effects-panel">
-                    <label>
+          <label>
             PitchShifter (<span id="pitchValue">0</span> semitone)
             <input id="pitch" type="range" min="-12" max="12" value="0" step="1" />
           </label>
@@ -48,21 +48,24 @@
         </div>
 
         <div class="edit-panel">
-          <h3>④ カット編集</h3>
-          <label>
-            Start (<span id="cutStartValue">0.00</span>s)
-            <input id="cutStart" type="range" min="0" max="100" value="0" step="0.1" />
-          </label>
-          <label>
-            End (<span id="cutEndValue">0.00</span>s)
-            <input id="cutEnd" type="range" min="0" max="100" value="100" step="0.1" />
-          </label>
-          <button id="applyCutBtn">Apply Cut</button>
+          <h3>Trim Editor</h3>
+          <canvas id="waveformCanvas" width="900" height="130" aria-label="Waveform"></canvas>
+          <div class="trim-sliders">
+            <label>
+              Start <span id="cutStartValue">0.00</span>s
+              <input id="cutStart" type="range" min="0" max="100" value="0" step="0.1" />
+            </label>
+            <label>
+              End <span id="cutEndValue">0.00</span>s
+              <input id="cutEnd" type="range" min="0" max="100" value="100" step="0.1" />
+            </label>
+          </div>
+          <button id="applyCutBtn">Apply Trim</button>
         </div>
       </section>
 
       <section class="pads-section">
-                <div id="pads" class="pads"></div>
+        <div id="pads" class="pads"></div>
       </section>
     </main>
 

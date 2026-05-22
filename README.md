@@ -15,9 +15,9 @@ MPC2000 へのオマージュを込めた、ブラウザで動くシンプルな
    - PitchShifter（再生レート変換）
    - Reverb（Convolver）
    - Delay（Delay + Feedback）
-4. **カット編集**
-   - Start/End スライダーで任意の区間を指定
-   - `Apply Cut` で選択範囲のみを残してサンプルをトリミング
+4. **カット編集（波形表示）**
+   - 波形を見ながら Start/End スライダーで任意区間を直感的に指定
+   - 選択区間はハイライト表示され、`Apply Trim` でその範囲をトリミング
 
 ## 使い方
 
@@ -25,7 +25,7 @@ MPC2000 へのオマージュを込めた、ブラウザで動くシンプルな
 2. `● Record` ボタンを押して録音開始（同じボタンが `■ Stop` に切り替わるので再押下で終了）、または `Load Audio` で音声を読み込み
 3. パッドをクリック（またはキーボード 1〜9）して再生
 4. Pitch / Reverb / Delay を調整
-5. 必要に応じて Start / End を指定し `Apply Cut` で音源をカット
+5. 波形と Start / End を確認し `Apply Trim` で音源をトリミング
 6. パッドの音を消したい場合は `Clear Pad`（または Delete / Backspace）を実行
 
 ## 注意

@@ -68,6 +68,23 @@ button:disabled { opacity:.5; cursor:not-allowed; }
 
 .effects-panel label, .edit-panel label { display:block; margin: .28rem 0; font-size: .78rem; }
 .edit-panel { grid-column: 1 / -1; }
+
+#waveformCanvas {
+  width: 100%;
+  height: 120px;
+  display: block;
+  border: 1px solid #0b0b0b;
+  border-radius: 8px;
+  background: #101417;
+  margin: .2rem 0 .45rem;
+}
+
+.trim-sliders {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: .45rem;
+  margin-bottom: .3rem;
+}
 input[type="range"] { width: 100%; }
 
 input[type="range"] {
@@ -154,6 +171,8 @@ input[type="range"]::-moz-range-thumb {
   button, .file-input { font-size: .72rem; padding: .35rem .4rem; border-radius: 7px; }
 
   .effects-panel label, .edit-panel label { margin: .2rem 0; font-size: .68rem; }
+  #waveformCanvas { height: 92px; margin: .15rem 0 .35rem; }
+  .trim-sliders { gap: .3rem; margin-bottom: .2rem; }
 
   input[type="range"]::-webkit-slider-thumb { width: 20px; height: 20px; margin-top: -7px; }
   input[type="range"]::-moz-range-thumb { width: 20px; height: 20px; }
