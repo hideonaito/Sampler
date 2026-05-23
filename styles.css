@@ -169,7 +169,6 @@ input[type="range"]::-moz-range-thumb {
   border: 1px solid #090909;
   font-weight: 700;
   letter-spacing: .04em;
-  font-size: .86rem;
 }
 .pad.active {
   background: linear-gradient(165deg, #ff9c40, var(--active));
